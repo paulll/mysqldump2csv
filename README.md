@@ -1,42 +1,21 @@
-# mysqldump2csv [![Build Status](https://img.shields.io/travis/bramp/mysqldump2csv.svg)](https://travis-ci.org/bramp/mysqldump2csv) [![Coverage](https://img.shields.io/coveralls/bramp/mysqldump2csv.svg)](https://coveralls.io/github/bramp/mysqldump2csv) [![Report card](https://goreportcard.com/badge/bramp.net/mysqldump2csv)](https://goreportcard.com/report/bramp.net/mysqldump2csv) [![GoDoc](https://godoc.org/bramp.net/mysqldump2csv?status.svg)](https://godoc.org/bramp.net/mysqldump2csv)
-by Andrew Brampton ([bramp.net](https://bramp.net))
+# mysqldump2csv
+Original code by Andrew Brampton (bramp.net).
 
-Convert a MySQL SQL dumps to a CSV file. Originally developed to convert [Wikipedia database backups](https://dumps.wikimedia.org/backup-index.html) into something more parsable. Uses a SQL parser to correctly parse the file, instead of hacky regexes (or likewise) that are unreliable.
+[mysqldump2csv](https://github.com/bramp/mysqldump2csv) fork that support insert statements with column specifications like `INSERT INTO t (A, B) VALUES (1)`. Useful for converting PhpMyAdmin dumps.
 
 # Install
-
-```bash
-go install bramp.net/mysqldump2csv
+```sh
+go install github.com/paulll/mysqldump2csv
 ```
 
-# Usage
-
-```man
-mysqldump2csv - Convert MySQL SQL Dumps to CSV
-
-Usage:
-  mysqldump2csv [flags] <dump.sql>
-
-Flags:
-  -delimiter string         field delimiter (default: ",")
-  -newline string           line terminator (default: "\n")
-
-  -header                   Print the CSV header (default: true)
-  -multi                    A CSV file is created for each table (default: false)
-  -table string             Filter the input to only this table (default: "")
-  -verbose                  Verbose output (default: false)
-
+# Example
+```sh
+$ mysqldump2csv -multi testdata/explicit_columns.sql
+$ ls *.csv
+explicit_columns_one_3c868ff6.csv 
+explicit_columns_one_9a354cf7.csv 
+explicit_columns_two_9a354cf7.csv
 ```
-
-Example:
-
-```bash
-$ mysqldump2csv enwiki-20170901-page.sql.gz > enwiki-20170901-page.csv
-```
-
-# Related
-
-After writing this I found an almost identical application, [mysqldump-to-csv](https://github.com/jamesmishra/mysqldump-to-csv) written with the same goals.
 
 # Licence (Apache 2)
 
