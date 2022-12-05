@@ -5,7 +5,7 @@ Original code by Andrew Brampton (bramp.net).
 
 # Install
 ```sh
-go install github.com/paulll/mysqldump2csv
+go install github.com/paulll/mysqldump2csv@latest
 ```
 
 # Example

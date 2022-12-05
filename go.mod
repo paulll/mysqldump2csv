@@ -1,4 +1,4 @@
-module bramp.net/mysqldump2csv
+module github.com/paulll/mysqldump2csv
 
 go 1.19
 
