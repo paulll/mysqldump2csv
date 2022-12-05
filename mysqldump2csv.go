@@ -21,17 +21,18 @@ package main // import "bramp.net/mysqldump2csv"
 
 import (
 	"bufio"
-	"errors"
 	"flag"
 	"fmt"
-	gzip "github.com/klauspost/pgzip" // (faster than "compress/gzip")
-	"github.com/xwb1989/sqlparser"
+	"hash/fnv"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
+
+	gzip "github.com/klauspost/pgzip" // (faster than "compress/gzip")
+	"github.com/xwb1989/sqlparser"
 )
 
 var (
@@ -119,7 +120,7 @@ func parseArgs() {
 
 func vlog(format string, v ...interface{}) {
 	if *verbose {
-		log.Printf(format, v)
+		log.Printf(format, v...)
 	}
 }
 
@@ -129,6 +130,33 @@ func tableName(n sqlparser.TableName) string {
 		return n.Qualifier.String() + "." + n.Name.String()
 	}
 	return n.Name.String()
+}
+
+func hash(s string) string {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return fmt.Sprintf("%x", h.Sum32())
+}
+
+func columnsSignature(insertColumns sqlparser.Columns) string {
+	signature := ""
+	for _, c := range insertColumns {
+		signature += c.String() + "\x1f"
+	}
+	return "_" + hash(signature)
+}
+
+func columnDefinitions(insertColumns sqlparser.Columns) []*sqlparser.ColumnDefinition {
+	columns := make([]*sqlparser.ColumnDefinition, len(insertColumns))
+	for i, c := range insertColumns {
+		columns[i] = &sqlparser.ColumnDefinition{
+			Name: c,
+			Type: sqlparser.ColumnType{
+				Type: "VARCHAR",
+			},
+		}
+	}
+	return columns
 }
 
 func (app *mySQLDump2Csv) writeRows(t *Table, rows sqlparser.Values) error {
@@ -189,18 +217,21 @@ func (app *mySQLDump2Csv) openCsv(t *Table) error {
 }
 
 func (app *mySQLDump2Csv) insert(s *sqlparser.Insert) error {
+	signature := ""
+
 	if len(s.Columns) > 0 {
-		return errors.New("insert statement specifies the columns, that is not currently supported")
+		signature = columnsSignature(s.Columns)
 	}
 
 	name := tableName(s.Table)
+	tableId := name + signature
 	if app.tableFilter != "" && app.tableFilter != name {
 		// Ignore this insert
 		return nil
 	}
 
 	// Create state for this table the first time we try and insert to it
-	t, found := app.tables[name]
+	t, found := app.tables[tableId]
 	if !found {
 		if !app.multi && len(app.tables) >= 1 {
 			var othername string
@@ -210,10 +241,18 @@ func (app *mySQLDump2Csv) insert(s *sqlparser.Insert) error {
 			return fmt.Errorf("found INSERT statements for multiple tables %q and %q. Either use --table or --multi", othername, t.name)
 		}
 
-		t = &Table{
-			name: name,
+		if len(s.Columns) > 0 {
+			t = &Table{
+				name:    tableId,
+				columns: columnDefinitions(s.Columns),
+			}
+		} else {
+			t = &Table{
+				name: tableId,
+			}
 		}
-		app.tables[name] = t
+
+		app.tables[tableId] = t
 	}
 
 	// Open the csv on the first attempt to write to it

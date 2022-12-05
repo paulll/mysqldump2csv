@@ -108,20 +108,35 @@ func TestMySQLDump2CsvMulti(t *testing.T) {
 	}
 }
 
-func TestMySQLDump2CsvNotSupported(t *testing.T) {
-	var b bytes.Buffer
-
-	app := newMySQLDump2Csv()
-	app.out = &b
-
-	filename := "testdata/not_supported.sql"
-
-	f, err := os.Open(filename)
+func TestMySQLDump2CsvExplicitColumns(t *testing.T) {
+	root, err := ioutil.TempDir("", "mysqldump2csv")
 	if err != nil {
-		t.Fatalf("Failed to open input testdata: %s", err)
+		t.Fatalf("Failed to create temp dir: %s", err)
 	}
 
-	if err := app.Process(f); err == nil || !strings.Contains(err.Error(), "not currently supported") {
-		t.Errorf("[%q] app.Process(...) err = %v, want 'not currently supported'", filename, err)
+	defer os.RemoveAll(root)
+
+	app := newMySQLDump2Csv()
+	app.multi = true
+	app.root = root
+
+	filename := "testdata/explicit_columns.sql"
+	processFile(t, app, filename)
+
+	// Test for the two output files
+	for _, file := range []string{"explicit_columns_one_3c868ff6.csv", "explicit_columns_one_9a354cf7.csv", "explicit_columns_two_9a354cf7.csv"} {
+		want, err := ioutil.ReadFile(filepath.Join("testdata", file))
+		if err != nil {
+			t.Fatalf("Failed to open output testdata: %s", err)
+		}
+
+		got, err := ioutil.ReadFile(filepath.Join(root, file))
+		if err != nil {
+			t.Errorf("Failed to open output: %s", err)
+		}
+
+		if diff := compare(got, want); diff != "" {
+			t.Errorf("[%q] app.Process(...) %s (-got +want)\n%s", filename, file, diff)
+		}
 	}
 }

@@ -13,4 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 ;
 
-INSERT INTO `page` (`id`, `name`) VALUES (1, 'A'), (2, 'B');
+
+INSERT INTO `explicit_columns_one` (`h1`, `h2`) VALUES (1, 'A'), (2, 'B');
+
+INSERT INTO `explicit_columns_one` (`h1`) VALUES (1), (2), (3), (4);
+
+INSERT INTO `explicit_columns_two` (`h1`) VALUES (1);
+INSERT INTO `explicit_columns_two` (`h1`) VALUES (2);
+INSERT INTO `explicit_columns_two` (`h1`) VALUES (3);
+
+INSERT INTO `explicit_columns_one` (`h1`, `h2`) VALUES (3, 'C');
+INSERT INTO `explicit_columns_one` (`h1`, `h2`) VALUES (4, 'D');
