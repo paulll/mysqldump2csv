@@ -359,7 +359,7 @@ func main() {
 		}
 
 		if err := app.Process(in); err != nil {
-			log.Fatal(err)
+			fmt.Println(err.Error())
 		}
 
 		if in, ok := in.(io.Closer); ok {
