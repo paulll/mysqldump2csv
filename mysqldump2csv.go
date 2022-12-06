@@ -42,6 +42,7 @@ var (
 	newline     = flag.String("newline", "\n", "line terminator")
 	tableFilter = flag.String("table", "", "filter the results to only this table")
 	header      = flag.Bool("header", true, "print the CSV header")
+	noQuotes    = flag.Bool("noquotes", false, "don't quote string fields")
 	multi       = flag.Bool("multi", false, "a csv file is created for each table")
 )
 
@@ -63,6 +64,7 @@ type mySQLDump2Csv struct {
 	newline     string
 	header      bool
 	tableFilter string
+	noQuotes    bool
 
 	// For multi output
 	multi bool
@@ -78,6 +80,7 @@ func newMySQLDump2Csv() *mySQLDump2Csv {
 		delimiter: ",",
 		newline:   "\n",
 		header:    true,
+		noQuotes:  false,
 		out:       os.Stdout,
 	}
 }
@@ -202,6 +205,7 @@ func (app *mySQLDump2Csv) openCsv(t *Table) error {
 	t.csv = NewSQLCsvWriter(t.out)
 	t.csv.Comma = app.delimiter
 	t.csv.Newline = app.newline
+	t.csv.NoQuotes = app.noQuotes
 
 	if app.header {
 		if len(t.columns) > 0 {
@@ -338,6 +342,7 @@ func main() {
 	app.header = *header
 	app.tableFilter = *tableFilter
 	app.multi = *multi
+	app.noQuotes = *noQuotes
 
 	for _, input := range flag.Args() {
 		var in io.Reader

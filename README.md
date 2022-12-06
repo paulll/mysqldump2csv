@@ -1,7 +1,11 @@
 # mysqldump2csv
 Original code by Andrew Brampton (bramp.net).
 
-[mysqldump2csv](https://github.com/bramp/mysqldump2csv) fork that support insert statements with column specifications like `INSERT INTO t (A, B) VALUES (1)`. Useful for converting PhpMyAdmin dumps.
+[mysqldump2csv](https://github.com/bramp/mysqldump2csv) fork with following modifications:
+
+- Added support for inserts with explicit column specification like `INSERT INTO t (A, B) VALUES (1)`. Useful for converting PhpMyAdmin dumps.
+- Graceful fatal exception handling. Original code does not flush opened CSV files on fatal errors. Useful for some messy SQL dumps with garbage at the end.
+- Option to disable quotes. That also replaces field/line terminators inside fields with spaces
 
 # Install
 ```sh

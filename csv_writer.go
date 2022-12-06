@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"strings"
 
 	"github.com/xwb1989/sqlparser"
 )
@@ -27,17 +28,19 @@ import (
 // strings are always quoted, and int/hex/binary are encoded in their appropriate
 // form.
 type SQLCsvWriter struct {
-	Comma   string // Field delimiter (defaults ",")
-	Newline string // Line terminator (defaults "\n")
-	w       *bufio.Writer
+	Comma    string // Field delimiter (defaults ",")
+	Newline  string // Line terminator (defaults "\n")
+	NoQuotes bool
+	w        *bufio.Writer
 }
 
 // NewSQLCsvWriter returns a new SqlCsvWriter that writes to w.
 func NewSQLCsvWriter(w io.Writer) *SQLCsvWriter {
 	return &SQLCsvWriter{
-		Comma:   ",",
-		Newline: "\n",
-		w:       bufio.NewWriter(w),
+		Comma:    ",",
+		Newline:  "\n",
+		NoQuotes: false,
+		w:        bufio.NewWriter(w),
 	}
 }
 
@@ -57,14 +60,27 @@ func (w *SQLCsvWriter) WriteHeader(header []*sqlparser.ColumnDefinition) error {
 	return err
 }
 
+func (w *SQLCsvWriter) fieldStringValue(node *sqlparser.SQLVal) string {
+	if w.NoQuotes && node.Type == sqlparser.StrVal {
+		replacer := strings.NewReplacer(w.Comma, " ", w.Newline, " ")
+		return replacer.Replace(string(node.Val))
+	} else {
+		return sqlparser.String(node)
+	}
+}
+
 // Writer writes a single CSV record to w along with any necessary quoting.
 // A record is a slice of sqlparser.Expr with each string being one field.
 func (w *SQLCsvWriter) Write(record []sqlparser.Expr) error {
 	for i, expr := range record {
 		var err error
 		switch expr := expr.(type) {
-		case *sqlparser.SQLVal, *sqlparser.NullVal:
-			if _, err = w.w.WriteString(sqlparser.String(expr)); err != nil {
+		case *sqlparser.SQLVal:
+			if _, err = w.w.WriteString(w.fieldStringValue(expr)); err != nil {
+				return err
+			}
+		case *sqlparser.NullVal:
+			if _, err = w.w.WriteString("null"); err != nil {
 				return err
 			}
 		default:
