@@ -6,6 +6,7 @@ Original code by Andrew Brampton (bramp.net).
 - Added support for inserts with explicit column specification like `INSERT INTO t (A, B) VALUES (1)`. Useful for converting PhpMyAdmin dumps.
 - Graceful fatal exception handling. Original code does not flush opened CSV files on fatal errors. Useful for some messy SQL dumps with garbage at the end.
 - Option to disable quotes. That also replaces field/line terminators inside fields with spaces
+- Parsing binary literals like `_binary 0x24a2f924`.
 
 # Install
 ```sh

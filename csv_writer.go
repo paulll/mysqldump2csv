@@ -83,6 +83,13 @@ func (w *SQLCsvWriter) Write(record []sqlparser.Expr) error {
 			if _, err = w.w.WriteString("null"); err != nil {
 				return err
 			}
+		case *sqlparser.UnaryExpr:
+			// Cases like 'INSERT INTO t VALUES (_binary 0x2432792431);'.
+			// That's not always correct, but in my case that's better then just
+			// raising fatal exception here.
+			if _, err = w.w.WriteString(sqlparser.String(expr.Expr)); err != nil {
+				return err
+			}
 		default:
 			return fmt.Errorf("unsupported complex expression %q", reflect.TypeOf(expr))
 		}
