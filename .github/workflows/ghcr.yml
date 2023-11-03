@@ -12,4 +12,4 @@ jobs:
       uses: pmorelli92/github-container-registry-build-push@2.1.0
       with:
         github-push-secret: ${{secrets.GITHUB_TOKEN}}
-        docker-image-name: paulll/mysqldump2csv
+        docker-image-name: mysqldump2csv
